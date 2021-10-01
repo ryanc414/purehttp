@@ -14,7 +14,7 @@ import (
 )
 
 func TestError(t *testing.T) {
-	f := func(req *http.Request) (*purehttp.HTTPResponse, error) {
+	f := func(req *http.Request) (*purehttp.Response, error) {
 		return nil, errors.New("not implemented")
 	}
 
@@ -34,11 +34,12 @@ func TestError(t *testing.T) {
 }
 
 func TestHappy(t *testing.T) {
-	f := func(req *http.Request) (*purehttp.HTTPResponse, error) {
-		return &purehttp.HTTPResponse{
+	f := func(req *http.Request) (*purehttp.Response, error) {
+		return &purehttp.Response{
 			Body:       []byte("{\"foo\":\"bar\"}"),
 			StatusCode: http.StatusAccepted,
-			Header:     http.Header{"Content-Type": []string{"application/json"}},
+			JSON:       true,
+			Header:     map[string][]string{"Server": {"Go"}},
 		}, nil
 	}
 
@@ -50,6 +51,7 @@ func TestHappy(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "application/json", rsp.Header.Get("Content-Type"))
+	assert.Equal(t, "Go", rsp.Header.Get("Server"))
 
 	assert.Equal(t, http.StatusAccepted, rsp.StatusCode)
 	data, err := ioutil.ReadAll(rsp.Body)
@@ -64,8 +66,8 @@ func TestHappy(t *testing.T) {
 }
 
 func TestDefault(t *testing.T) {
-	f := func(req *http.Request) (*purehttp.HTTPResponse, error) {
-		return &purehttp.HTTPResponse{}, nil
+	f := func(req *http.Request) (*purehttp.Response, error) {
+		return &purehttp.Response{}, nil
 	}
 
 	h := purehttp.NewHandler(f)

@@ -2,13 +2,14 @@ package purehttp
 
 import "net/http"
 
-type HTTPResponse struct {
+type Response struct {
 	Body       []byte
-	StatusCode int
 	Header     http.Header
+	JSON       bool
+	StatusCode int
 }
 
-type HandlerFunc func(req *http.Request) (*HTTPResponse, error)
+type HandlerFunc func(req *http.Request) (*Response, error)
 
 type Handler struct {
 	handle HandlerFunc
@@ -26,6 +27,10 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	header := w.Header()
+
+	if rsp.JSON && len(rsp.Body) > 0 {
+		header.Set("Content-Type", "application/json")
+	}
 
 	for h := range rsp.Header {
 		val := rsp.Header.Get(h)
